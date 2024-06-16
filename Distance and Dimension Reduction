@@ -1,0 +1,104 @@
+
+layout: page
+title: Distance
+---
+
+```{r options, echo=FALSE}
+library(knitr)
+opts_chunk$set(fig.path=paste0("figure/", sub("(.*).Rmd","\\1",basename(knitr:::knit_concord$get('infile'))), "-"))
+```
+
+# Distance and Dimension Reduction
+
+## Euclidean Distance
+
+As a review, let's define the distance between two points, $A$ and $B$, on a Cartesian plane.
+
+```{r,echo=FALSE,fig.cap=""}
+library(rafalib)
+mypar()
+plot(c(0,1,1),c(0,0,1),pch=16,cex=2,xaxt="n",yaxt="n",xlab="",ylab="",bty="n",xlim=c(-0.25,1.25),ylim=c(-0.25,1.25))
+lines(c(0,1,1,0),c(0,0,1,0))
+text(0,.2,expression(paste('(A'[x]*',A'[y]*')')),cex=1.5)
+text(1,1.2,expression(paste('(B'[x]*',B'[y]*')')),cex=1.5)
+text(-0.1,0,"A",cex=2)
+text(1.1,1,"B",cex=2)
+```
+
+The euclidean distance between $A$ and $B$ is simply:
+
+$$\sqrt{ (A_x-B_x)^2 + (A_y-B_y)^2}$$
+
+
+## Distance in High Dimensions
+
+We introduce a dataset with gene expression measurements for 22,215 genes from 189 samples. The R objects can be downloaded like this:
+
+```{r,eval=FALSE}
+library(devtools)
+install_github("genomicsclass/tissuesGeneExpression")
+```
+
+The data represent RNA expression levels for eight tissues, each with several individuals.
+
+```{r}
+library(tissuesGeneExpression)
+data(tissuesGeneExpression)
+dim(e) ##e contains the expression data
+table(tissue) ##tissue[i] tells us what tissue is represented by e[,i]
+```
+
+
+
+$$
+\mbox{dist}(i,j) = \sqrt{ \sum_{g=1}^{22215} (Y_{g,i}-Y_{g,j })^2 }
+$$
+
+and the distance between two features $h$ and $g$ is:
+
+$$
+\mbox{dist}(h,g) = \sqrt{ \sum_{i=1}^{189} (Y_{h,i}-Y_{g,i})^2 }
+$$
+
+Note: In practice, distances between features are typically applied after standardizing the data for each feature. This is equivalent to computing one minus the correlation. This is done because the differences in overall levels between features are often not due to biological effects but technical ones. More details on this topic can be found in [this presentation](http://master.bioconductor.org/help/course-materials/2002/Summer02Course/Distance/distance.pdf).
+
+#### Distance with matrix algebra
+
+The distance between samples $i$ and $j$ can be written as
+
+$$ \mbox{dist}(i,j) = (\mathbf{Y}_i - \mathbf{Y}_j)^\top(\mathbf{Y}_i - \mathbf{Y}_j)$$
+
+with $\mathbf{Y}_i$ and $\mathbf{Y}_j$ columns $i$ and $j$. This result can be very convenient in practice as computations can be made much faster using matrix multiplication.
+
+
+
+```{r}
+x <- e[,1]
+y <- e[,2]
+z <- e[,87]
+sqrt(sum((x-y)^2))
+sqrt(sum((x-z)^2))
+```
+
+As expected, the kidneys are closer to each other. A faster way to compute this is using matrix algebra:
+
+```{r}
+sqrt( crossprod(x-y) )
+sqrt( crossprod(x-z) )
+```
+
+Now to compute all the distances at once, we have the function `dist`. Because it computes the distance between each row, and here we are interested in the distance between samples, we transpose the matrix
+
+```{r}
+d <- dist(t(e))
+class(d)
+```
+
+Note that this produces an object of class `dist` and, to access the entries using row and column indices, we need to coerce it into a matrix:
+
+```{r}
+as.matrix(d)[1,2]
+as.matrix(d)[1,87]
+```
+
+It is important to remember that if we run `dist` on `e`, it will compute all pairwise distances between genes. This will try to create a $22215 \times 22215$ matrix that may crash your R sessions.
