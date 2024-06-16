@@ -1,6 +1,6 @@
-
+---
 layout: page
-title: Distance
+title: Distance 
 ---
 
 ```{r options, echo=FALSE}
@@ -9,6 +9,24 @@ opts_chunk$set(fig.path=paste0("figure/", sub("(.*).Rmd","\\1",basename(knitr:::
 ```
 
 # Distance and Dimension Reduction
+
+## Introduction
+
+The concept of distance is quite intuitive. For example, when we cluster animals into subgroups, we are implicitly defining a distance that permits us to say what animals are "close" to each other.
+
+![Clustering of animals.](images/handmade/animals.png)
+
+Many of the analyses we perform with high-dimensional data relate directly or indirectly to distance. Many clustering and machine learning techniques rely on being able to define distance, using features or predictors. For example, to create _heatmaps_, which are widely used in genomics and other high-throughput fields, a distance is computed explicitly. 
+
+![Example of heatmap. Image Source: Heatmap, Gaeddal, 01.28.2007 Wikimedia Commons](images/handmade/Heatmap.png)
+
+In these plots the measurements, which are stored in a matrix, are
+represented with colors after the columns and rows have been
+clustered. (A side note: red and green, a common color theme for heatmaps,
+are two of the most difficult colors for many color-blind people to discern.)
+Here we will learn the necessary mathematics and computing
+skills to understand and create heatmaps. We start by reviewing the
+mathematical definition of distance.
 
 ## Euclidean Distance
 
@@ -48,7 +66,11 @@ dim(e) ##e contains the expression data
 table(tissue) ##tissue[i] tells us what tissue is represented by e[,i]
 ```
 
+We are interested in describing distance between samples in the context of this dataset. We might also be interested in finding genes that _behave similarly_ across samples.
 
+To define distance, we need to know what the points are since mathematical distance is computed between points. With high dimensional data, points are no longer on the Cartesian plane. Instead they are in higher dimensions. For example, sample $i$ is defined by a point in 22,215 dimensional space: $(Y_{1,i},\dots,Y_{22215,i})^\top$. Feature $g$ is defined by a point in 189 dimensions $(Y_{g,1},\dots,Y_{g,189})^\top$
+
+Once we define points, the Euclidean distance is defined in a very similar way as it is defined for two dimensions. For instance, the distance between two samples $i$ and $j$ is:
 
 $$
 \mbox{dist}(i,j) = \sqrt{ \sum_{g=1}^{22215} (Y_{g,i}-Y_{g,j })^2 }
@@ -70,7 +92,9 @@ $$ \mbox{dist}(i,j) = (\mathbf{Y}_i - \mathbf{Y}_j)^\top(\mathbf{Y}_i - \mathbf{
 
 with $\mathbf{Y}_i$ and $\mathbf{Y}_j$ columns $i$ and $j$. This result can be very convenient in practice as computations can be made much faster using matrix multiplication.
 
+#### Examples
 
+We can now use the formulas above to compute distance. Let's compute distance between samples 1 and 2, both kidneys, and then to sample 87, a colon.
 
 ```{r}
 x <- e[,1]
@@ -102,3 +126,4 @@ as.matrix(d)[1,87]
 ```
 
 It is important to remember that if we run `dist` on `e`, it will compute all pairwise distances between genes. This will try to create a $22215 \times 22215$ matrix that may crash your R sessions.
+
